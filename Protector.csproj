@@ -15,6 +15,8 @@
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <CodeContractsAssemblyMode>1</CodeContractsAssemblyMode>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -131,18 +133,28 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HttpServer">
+      <HintPath>References\HttpServer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.Data.Sqlite">
       <HintPath>References\Mono.Data.Sqlite.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>..\packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
+      <HintPath>References\MySql.Data.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>References\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="OTAPI">
-      <HintPath>..\TShock\TerrariaServerAPI\TerrariaServerAPI\bin\Debug\OTAPI.dll</HintPath>
+      <HintPath>References\OTAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Plugin Common Lib 4.0.3">
+      <HintPath>References\Plugin Common Lib 4.0.3.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -151,6 +163,34 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
+    <Reference Include="TerrariaServer">
+      <HintPath>References\TerrariaServer.exe</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="TShockAPI">
+      <HintPath>References\TShockAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Wolfje.Plugins.Jist">
+      <HintPath>References\Wolfje.Plugins.Jist.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Wolfje.Plugins.SEconomy">
+      <HintPath>References\Wolfje.Plugins.SEconomy.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Wolfje.Plugins.SEconomy.CmdAliasModule">
+      <HintPath>References\Wolfje.Plugins.SEconomy.CmdAliasModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Wolfje.Plugins.SEconomy.JistAliasModule">
+      <HintPath>References\Wolfje.Plugins.SEconomy.JistAliasModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Wolfje.Plugins.SEconomy.SEconomyScriptPlugin">
+      <HintPath>References\Wolfje.Plugins.SEconomy.SEconomyScriptPlugin.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Implementation\ChestManager.cs" />
@@ -194,7 +234,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
     <None Include="publish.ps1" />
     <None Include="README.md" />
     <None Include="CONTRIBUTING.md" />
@@ -203,27 +242,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Plugin Common Library\Plugin Common Library.csproj">
-      <Project>{1d38e0cf-bf13-4229-860f-3809f39f0892}</Project>
-      <Name>Plugin Common Library</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SEconomy\SEconomyPlugin\SEconomyPlugin.csproj">
-      <Project>{a3dfc107-09d3-4bc4-be73-ce7d1cc98495}</Project>
-      <Name>SEconomyPlugin</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\TShock\TerrariaServerAPI\TerrariaServerAPI\TerrariaServerAPI.csproj">
-      <Project>{6877506e-adc6-4142-98a6-79e4fa02855a}</Project>
-      <Name>TerrariaServerAPI</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\TShock\TShockAPI\TShockAPI.csproj">
-      <Project>{49606449-072b-4cf5-8088-aa49da586694}</Project>
-      <Name>TShockAPI</Name>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
@@ -231,9 +249,8 @@
   </PropertyGroup>
   <Import Project="$(SlowCheetahTargets)" Condition="Exists('$(SlowCheetahTargets)')" Label="SlowCheetah" />
   <PropertyGroup>
-    <PreBuildEvent>IF "$(ConfigurationName)" == "Release" (
-  GitVersion.exe /updateassemblyinfo "$(ProjectDir)Properties/AssemblyInfo.cs"
-)</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup Label="SlowCheetah">
     <SlowCheetahToolsPath>$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\..\packages\SlowCheetah.2.5.10.7\tools\))</SlowCheetahToolsPath>
@@ -241,6 +258,13 @@
     <SlowCheetah_NuGetImportPath Condition=" '$(SlowCheetah_NuGetImportPath)'=='' ">$([System.IO.Path]::GetFullPath( $(MSBuildProjectDirectory)\Properties\SlowCheetah\SlowCheetah.Transforms.targets ))</SlowCheetah_NuGetImportPath>
     <SlowCheetahTargets Condition=" '$(SlowCheetah_EnableImportFromNuGet)'=='true' and Exists('$(SlowCheetah_NuGetImportPath)') ">$(SlowCheetah_NuGetImportPath)</SlowCheetahTargets>
   </PropertyGroup>
+  <Import Project="packages\SlowCheetah.2.5.48\build\SlowCheetah.targets" Condition="Exists('packages\SlowCheetah.2.5.48\build\SlowCheetah.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\SlowCheetah.2.5.48\build\SlowCheetah.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\SlowCheetah.2.5.48\build\SlowCheetah.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -38,6 +38,7 @@ Grab the latest release and put the _.dll_ files into your server's _ServerPlugi
 * `/dumpbankchest`
 * `/refillchest [time] [+ot|-ot] [+ll amount|-ll] [+al|-al] [-p]`
 * `/refillchestmany <selector> [time] [+ot|-ot] [+ll amount|-ll] [+al|-al] [-p]`
+* `/refillallchest all [time] [+ot|-ot] [+ll amount|-ll] [+al|-al] [-p]`
 * `/lockchest [-p]`
 * `/swapchest [-p]`
 * `/tradechest <sell amount> <sell item> <pay amount> <pay item or group> [limit]`

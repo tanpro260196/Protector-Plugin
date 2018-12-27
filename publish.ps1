@@ -147,7 +147,7 @@ function Update-AssemblyVersion {
   # GitVersion will increment the assembly version and return some information about it in json format
   # Actually, this should have happened already be the pre-build event configured for the project, so this
   # additional call to GitVersion will just return the current version number.
-  GitVersion.exe /updateassemblyinfo $assemblyInfoPath | ConvertFrom-Json
+  # GitVersion.exe /updateassemblyinfo $assemblyInfoPath | ConvertFrom-Json
 }
 
 function Generate-Changelog($pluginApiVersion, $tshockVersion, $terrariaVersion, $outChangelogFile, $gitHubUrl) {

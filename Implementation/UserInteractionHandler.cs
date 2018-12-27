@@ -13,7 +13,7 @@ using OTAPI.Tile;
 using Terraria.ID;
 using Terraria.Localization;
 using DPoint = System.Drawing.Point;
-
+using OTAPI;
 using Terraria.Plugins.Common;
 using Terraria.Plugins.Common.Collections;
 using TShockAPI;
@@ -146,10 +146,14 @@ namespace Terraria.Plugins.CoderCow.Protector {
         this.TpChestCommand_Exec, this.TpChestCommand_HelpCallback, ProtectorPlugin.ScanChests_Permission,
         allowServer: false
       );
-      #endregion
-      
-      #if DEBUG
-      base.RegisterCommand(new[] { "fc" }, args => {
+      base.RegisterCommand(
+        new[] { "refillallchest", "rallchest" },
+        this.RefillAllChestCommand_Exec, this.RefillAllChestCommand_HelpCallback, ProtectorPlugin.Utility_Permission
+        );
+     #endregion
+
+#if DEBUG
+            base.RegisterCommand(new[] { "fc" }, args => {
         for (int i= 0; i < Main.chest.Length; i++) {
           if (i != ChestManager.DummyChestIndex)
             Main.chest[i] = Main.chest[i] ?? new Chest();
@@ -187,7 +191,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
       int playerProtectionCount = 0;
       lock (this.WorldMetadata.Protections) {
         foreach (KeyValuePair<DPoint,ProtectionEntry> protection in this.WorldMetadata.Protections) {
-          if (protection.Value.Owner == args.Player.Account.ID)
+          if (protection.Value.Owner == args.Player.User.ID)
             playerProtectionCount++;
         }
       }
@@ -306,7 +310,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
               DPoint location = protectionPair.Key;
               ProtectionEntry protection = protectionPair.Value;
 
-              TShockAPI.DB.UserAccount tsUser = TShock.UserAccounts.GetUserAccountByID(protection.Owner);
+              TShockAPI.DB.User tsUser = TShock.Users.GetUserByID(protection.Owner);
               if (tsUser == null)
                 protectionsToRemove.Add(location);
             }
@@ -974,7 +978,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
         playerName = args.ParamsToSingleString();
       }
       
-      TShockAPI.DB.UserAccount tsUser;
+      TShockAPI.DB.User tsUser;
       if (!TShockEx.MatchUserByPlayerName(playerName, out tsUser, args.Player))
         return;
 
@@ -1029,7 +1033,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
         playerName = args.ParamsToSingleString();
       }
 
-      TShockAPI.DB.UserAccount tsUser;
+      TShockAPI.DB.User tsUser;
       if (!TShockEx.MatchUserByPlayerName(playerName, out tsUser, args.Player))
         return;
 
@@ -1768,10 +1772,207 @@ namespace Terraria.Plugins.CoderCow.Protector {
 
       return true;
     }
-    #endregion
+        #endregion
+
+
+    #region [Command Handling /refillallchest]
+        private void RefillAllChestCommand_Exec(CommandArgs args)
+        {
+            if (args == null || this.IsDisposed)
+                return;
+
+            if (!args.Player.Group.HasPermission(ProtectorPlugin.SetRefillChests_Permission))
+            {
+                args.Player.SendErrorMessage("You do not have the permission to set up refill chests.");
+                return;
+            }
+
+            bool? oneLootPerPlayer = null;
+            int? lootLimit = null;
+            bool? autoLock = null;
+            TimeSpan? refillTime = null;
+            bool? autoEmpty = null;
+            string selector = null;
+            bool fairLoot = false;
+            bool invalidSyntax = (args.Parameters.Count == 0);
+            if (!invalidSyntax)
+            {
+                selector = args.Parameters[0].ToLowerInvariant();
+
+                int timeParameters = 0;
+                for (int i = 1; i < args.Parameters.Count; i++)
+                {
+                    string param = args.Parameters[i];
+                    if (param.Equals("+ot", StringComparison.InvariantCultureIgnoreCase))
+                        oneLootPerPlayer = true;
+                    else if (param.Equals("-ot", StringComparison.InvariantCultureIgnoreCase))
+                        oneLootPerPlayer = false;
+                    else if (param.Equals("-ll", StringComparison.InvariantCultureIgnoreCase))
+                        lootLimit = -1;
+                    else if (param.Equals("+ll", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (args.Parameters.Count - 1 == i)
+                        {
+                            invalidSyntax = true;
+                            break;
+                        }
+
+                        int lootTimeAmount;
+                        if (!int.TryParse(args.Parameters[i + 1], out lootTimeAmount) || lootTimeAmount < 0)
+                        {
+                            invalidSyntax = true;
+                            break;
+                        }
+
+                        lootLimit = lootTimeAmount;
+                        i++;
+                    }
+                    else if (param.Equals("+al", StringComparison.InvariantCultureIgnoreCase))
+                        autoLock = true;
+                    else if (param.Equals("+fl", StringComparison.InvariantCultureIgnoreCase))
+                        fairLoot = true;
+                    else if (param.Equals("-al", StringComparison.InvariantCultureIgnoreCase))
+                        autoLock = false;
+                    else if (param.Equals("+ae", StringComparison.InvariantCultureIgnoreCase))
+                        autoEmpty = true;
+                    else if (param.Equals("-ae", StringComparison.InvariantCultureIgnoreCase))
+                        autoEmpty = false;
+                    else
+                        timeParameters++;
+                }
+
+                if (!invalidSyntax && timeParameters > 0)
+                {
+                    if (!TimeSpanEx.TryParseShort(
+                      args.ParamsToSingleString(1, args.Parameters.Count - timeParameters - 1), out refillTime
+                    ))
+                    {
+                        invalidSyntax = true;
+                    }
+                }
+            }
+
+            ChestKind chestKindToSelect = ChestKind.Unknown;
+            switch (selector)
+            {
+                case "dungeon":
+                    chestKindToSelect = ChestKind.DungeonChest;
+                    break;
+                case "sky":
+                    chestKindToSelect = ChestKind.SkyIslandChest;
+                    break;
+                case "ocean":
+                    chestKindToSelect = ChestKind.OceanChest;
+                    break;
+                case "shadow":
+                    chestKindToSelect = ChestKind.HellShadowChest;
+                    break;
+                case "hardmodedungeon":
+                    chestKindToSelect = ChestKind.HardmodeDungeonChest;
+                    break;
+                case "pyramid":
+                    chestKindToSelect = ChestKind.PyramidChest;
+                    break;
+                case "all":
+                    break;
+                default:
+                    invalidSyntax = true;
+                    break;
+            }
+
+            if (invalidSyntax)
+            {
+                args.Player.SendErrorMessage("Proper syntax: /refillallchest all [time] [+ot|-ot] [+ll amount|-ll] [+al|-al] [+ae|-ae] [+fl]");
+                args.Player.SendErrorMessage("Type /refillallchest help to get more help to this command.");
+                return;
+            }
+
+            if (chestKindToSelect == ChestKind.Unknown)
+            {
+                int createdChestsCounter = 0;
+                for (int i = 0; i < Main.chest.Length; i++)
+                {
+                    Chest chest = Main.chest[i];
+                    if (chest == null)
+                        continue;
+
+                    DPoint chestLocation = new DPoint(chest.x, chest.y);
+                    ITile chestTile = TerrariaUtils.Tiles[chestLocation];
+                    if (!chestTile.active() || (chestTile.type != TileID.Containers && chestTile.type != TileID.Containers2))
+                        continue;
+
+                    //if (TerrariaUtils.Tiles.GuessChestKind(chestLocation) != chestKindToSelect)
+                       // continue;
+
+                    try
+                    {
+                        ProtectionEntry protection = this.ProtectionManager.CreateProtection(args.Player, chestLocation, false);
+                        protection.IsSharedWithEveryone = this.Config.AutoShareRefillChests;
+                    }
+                    catch (AlreadyProtectedException)
+                    {
+                        if (!this.ProtectionManager.CheckBlockAccess(args.Player, chestLocation, true) && !args.Player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission))
+                        {
+                            args.Player.SendWarningMessage($"You did not have access to convert chest {TShock.Utils.ColorTag(chestLocation.ToString(), Color.Red)} into a refill chest.");
+                            continue;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.PluginTrace.WriteLineWarning($"Failed to create protection at {TShock.Utils.ColorTag(chestLocation.ToString(), Color.Red)}: \n{ex}");
+                    }
+
+                    try
+                    {
+                        this.ChestManager.SetUpRefillChest(
+                          args.Player, chestLocation, refillTime, oneLootPerPlayer, lootLimit, autoLock, autoEmpty, fairLoot
+                        );
+                        createdChestsCounter++;
+                    }
+                    catch (Exception ex)
+                    {
+                        this.PluginTrace.WriteLineWarning($"Failed to create / update refill chest at {TShock.Utils.ColorTag(chestLocation.ToString(), Color.Red)}: \n{ex}");
+                    }
+                }
+
+                args.Player.SendSuccessMessage($"{TShock.Utils.ColorTag(createdChestsCounter.ToString(), Color.Red)} refill chests were created / updated.");
+            }
+        }
+        private bool RefillAllChestCommand_HelpCallback(CommandArgs args)
+        {
+            if (args == null || this.IsDisposed)
+                return true;
+
+            int pageNumber;
+            if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
+                return false;
+
+            switch (pageNumber)
+            {
+                default:
+                    args.Player.SendMessage("Command reference for /refillallchest (Page 1 of 3)", Color.Lime);
+                    args.Player.SendMessage("/refillallchest|/rallchest all [time] [+ot|-ot] [+ll amount|-ll] [+al|-al] [+ae|-ae] [+fl]", Color.White);
+                    args.Player.SendMessage("Converts all chests to refill chests or alters them.", Color.LightGray);
+                    args.Player.SendMessage(string.Empty, Color.LightGray);
+                    args.Player.SendMessage("time = Examples: 2h, 2h30m, 2h30m10s, 1d6h etc.", Color.LightGray);
+                    break;
+                case 2:
+                    args.Player.SendMessage("+ot = The chest can only be looted once per player.", Color.LightGray);
+                    args.Player.SendMessage("+ll = The chest can only be looted the given amount of times in total.", Color.LightGray);
+                    args.Player.SendMessage("+al = After being looted, the chest is automatically locked.", Color.LightGray);
+                    args.Player.SendMessage("+ae = After being looted, the chest is automatically emptied, regardless of contents.", Color.LightGray);
+                    args.Player.SendMessage("+fl = An item of the chest's own type will be placed inside the chest yielding in a fair loot.", Color.LightGray);
+                    args.Player.SendMessage("This command is expected to be used on a fresh world, the specified selector might", Color.LightGray);
+                    args.Player.SendMessage("also select player chests. This is how chest kinds are distinguished:", Color.LightGray);
+                    break;
+            }
+            return true;
+        }
+        #endregion
+
 
     #region [Command Handling /bankchest]
-    private void BankChestCommand_Exec(CommandArgs args) {
+        private void BankChestCommand_Exec(CommandArgs args) {
       if (args.Parameters.Count < 1) {
         args.Player.SendErrorMessage("Proper syntax: /bankchest <number>");
         args.Player.SendErrorMessage("Type /bankchest help to get more help to this command.");
@@ -2161,7 +2362,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
           string chestOwner = "{not protected}";
           ProtectionEntry protection = this.ProtectionManager.GetProtectionAt(chestLocation);
           if (protection != null) {
-            UserAccount tsUser = TShock.UserAccounts.GetUserAccountByID(protection.Owner);
+            User tsUser = TShock.Users.GetUserByID(protection.Owner);
             chestOwner = tsUser?.Name ?? $"{{user id: {protection.Owner}}}";
           }
 
@@ -2294,7 +2495,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
             }
 
             if (
-              protection.Owner == player.Account.ID || (
+              protection.Owner == player.User.ID || (
                 this.Config.AutoDeprotectEverythingOnDestruction &&
                 player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission)
               )
@@ -2816,7 +3017,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
       }
 
       try {
-        protection.TradeChestData.AddOrUpdateLooter(player.Account.ID);
+        protection.TradeChestData.AddOrUpdateLooter(player.User.ID);
       } catch (InvalidOperationException) {
         player.SendErrorMessage($"The vendor doesn't allow more than {protection.TradeChestData.LootLimitPerPlayer} trades per player.");
         return;
@@ -2858,7 +3059,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
         // The player who set up the refill chest or masters shall modify its contents.
         if (
           this.Config.AllowRefillChestContentChanges &&
-          (refillChest.Owner == player.Account.ID || player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission))
+          (refillChest.Owner == player.User.ID || player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission))
         ) {
           refillChest.RefillItems[slotIndex] = newItem;
 
@@ -2880,8 +3081,8 @@ namespace Terraria.Plugins.CoderCow.Protector {
 
         if (refillChest.OneLootPerPlayer || refillChest.RemainingLoots > 0) {
           Contract.Assert(refillChest.Looters != null);
-          if (!refillChest.Looters.Contains(player.Account.ID)) {
-            refillChest.Looters.Add(player.Account.ID);
+          if (!refillChest.Looters.Contains(player.User.ID)) {
+            refillChest.Looters.Add(player.User.ID);
 
             if (refillChest.RemainingLoots > 0)
               refillChest.RemainingLoots--;
@@ -3366,7 +3567,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
 
       bool canViewExtendedInfo = (
         player.Group.HasPermission(ProtectorPlugin.ViewAllProtections_Permission) ||
-        protection.Owner == player.Account.ID ||
+        protection.Owner == player.User.ID ||
         protection.IsSharedWithPlayer(player)
       );
       
@@ -3461,7 +3662,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
               if (i > 0)
                 sharedListBuilder.Append(", ");
 
-              TShockAPI.DB.UserAccount tsUser = TShock.UserAccounts.GetUserAccountByID(protection.SharedUsers[i]);
+              TShockAPI.DB.User tsUser = TShock.Users.GetUserByID(protection.SharedUsers[i]);
               if (tsUser != null)
                 sharedListBuilder.Append(tsUser.Name);
             }
@@ -3498,7 +3699,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
     }
 
     private static string GetUserName(int userId) {
-      TShockAPI.DB.UserAccount tsUser = TShock.UserAccounts.GetUserAccountByID(userId);
+      TShockAPI.DB.User tsUser = TShock.Users.GetUserByID(userId);
       if (tsUser != null)
         return tsUser.Name;
       else 
@@ -3942,7 +4143,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
 
       if (
         !this.Config.AllowRefillChestContentChanges || 
-        (player.Account.ID != refillChest.Owner && !player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission))
+        (player.User.ID != refillChest.Owner && !player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission))
       ) {
         if (refillChest.RemainingLoots == 0) {
           if (sendReasonMessages)
@@ -3956,7 +4157,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
           if (refillChest.Looters == null)
             refillChest.Looters = new Collection<int>();
 
-          if (refillChest.Looters.Contains(player.Account.ID)) {
+          if (refillChest.Looters.Contains(player.User.ID)) {
             if (sendReasonMessages)
               player.SendErrorMessage("This chest can be looted only once per player.");
 
