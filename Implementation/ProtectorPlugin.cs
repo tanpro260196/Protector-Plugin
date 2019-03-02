@@ -41,8 +41,9 @@ namespace Terraria.Plugins.CoderCow.Protector {
     public const string ScanChests_Permission           = "prot.scanchests";
     public const string Utility_Permission              = "prot.utility";
     public const string Cfg_Permission                  = "prot.cfg";
+    public const string BlacklistedPermission           = "prot.blacklisted";
 
-    public static string DataDirectory => Path.Combine(TShock.SavePath, "Protector");
+        public static string DataDirectory => Path.Combine(TShock.SavePath, "Protector");
     public static string ConfigFilePath => Path.Combine(ProtectorPlugin.DataDirectory, "Config.xml");
     public static string SqlLiteDatabaseFile => Path.Combine(ProtectorPlugin.DataDirectory, "Protector.sqlite");
     public static string WorldMetadataDirectory => Path.Combine(ProtectorPlugin.DataDirectory, "World Data");
@@ -287,11 +288,11 @@ namespace Terraria.Plugins.CoderCow.Protector {
     }
 
     private void Net_ChestOpen(object sender, ChestOpenEventArgs e) {
-      if (this.isDisposed || !this.hooksEnabled || e.Handled)
-        return;
-
-      e.Handled = this.UserInteractionHandler.HandleChestOpen(e.Player, e.ChestIndex, e.Location);
-    }
+        if (this.isDisposed || !this.hooksEnabled || e.Handled)
+            return;
+        
+        e.Handled = this.UserInteractionHandler.HandleChestOpen(e.Player, e.ChestIndex, e.Location);
+        }
 
     private void Net_ChestRename(object sender, ChestRenameEventArgs e) {
       if (this.isDisposed || !this.hooksEnabled || e.Handled)
@@ -301,10 +302,10 @@ namespace Terraria.Plugins.CoderCow.Protector {
     }
 
     private void Net_ChestGetContents(object sender, TileLocationEventArgs e) {
-      if (this.isDisposed || !this.hooksEnabled || e.Handled)
+        if (this.isDisposed || !this.hooksEnabled || e.Handled)
         return;
 
-      e.Handled = this.UserInteractionHandler.HandleChestGetContents(e.Player, e.Location);
+        e.Handled = this.UserInteractionHandler.HandleChestGetContents(e.Player, e.Location);
     }
 
     private void Net_ChestModifySlot(object sender, ChestModifySlotEventArgs e) {

@@ -133,28 +133,34 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HttpServer">
-      <HintPath>References\HttpServer.dll</HintPath>
+    <Reference Include="HttpServer, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5684c2c737cd4271, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\HttpServer.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Mono.Data.Sqlite">
-      <HintPath>References\Mono.Data.Sqlite.dll</HintPath>
+    <Reference Include="Mono.Data.Sqlite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\Mono.Data.Sqlite.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <HintPath>References\MySql.Data.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\MySql.Data.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>References\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OTAPI">
-      <HintPath>References\OTAPI.dll</HintPath>
+    <Reference Include="OTAPI, Version=1.3.5.3, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\OTAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Plugin Common Lib 4.0.3">
-      <HintPath>References\Plugin Common Lib 4.0.3.dll</HintPath>
+    <Reference Include="Plugin Common Lib 4.0.3, Version=4.0.3.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\Plugin Common Lib 4.0.3.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -163,32 +169,34 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
-    <Reference Include="TerrariaServer">
-      <HintPath>References\TerrariaServer.exe</HintPath>
+    <Reference Include="TerrariaServer, Version=1.3.5.3, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\TerrariaServer.exe</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="TShockAPI">
-      <HintPath>References\TShockAPI.dll</HintPath>
+    <Reference Include="TShockAPI, Version=4.3.25.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\Old Ref\TShockAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Wolfje.Plugins.Jist">
-      <HintPath>References\Wolfje.Plugins.Jist.dll</HintPath>
+      <HintPath>References\Old Ref\Wolfje.Plugins.Jist.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Wolfje.Plugins.SEconomy">
-      <HintPath>References\Wolfje.Plugins.SEconomy.dll</HintPath>
+      <HintPath>References\Old Ref\Wolfje.Plugins.SEconomy.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Wolfje.Plugins.SEconomy.CmdAliasModule">
-      <HintPath>References\Wolfje.Plugins.SEconomy.CmdAliasModule.dll</HintPath>
+      <HintPath>References\Old Ref\Wolfje.Plugins.SEconomy.CmdAliasModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Wolfje.Plugins.SEconomy.JistAliasModule">
-      <HintPath>References\Wolfje.Plugins.SEconomy.JistAliasModule.dll</HintPath>
+      <HintPath>References\Old Ref\Wolfje.Plugins.SEconomy.JistAliasModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Wolfje.Plugins.SEconomy.SEconomyScriptPlugin">
-      <HintPath>References\Wolfje.Plugins.SEconomy.SEconomyScriptPlugin.dll</HintPath>
+      <HintPath>References\Old Ref\Wolfje.Plugins.SEconomy.SEconomyScriptPlugin.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

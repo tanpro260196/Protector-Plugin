@@ -18,6 +18,8 @@ using Terraria.Plugins.Common;
 using Terraria.Plugins.Common.Collections;
 using TShockAPI;
 using TShockAPI.DB;
+using Terraria;
+using TerrariaApi;
 
 namespace Terraria.Plugins.CoderCow.Protector {
   public class UserInteractionHandler: UserInteractionHandlerBase, IDisposable {
@@ -981,7 +983,6 @@ namespace Terraria.Plugins.CoderCow.Protector {
       TShockAPI.DB.User tsUser;
       if (!TShockEx.MatchUserByPlayerName(playerName, out tsUser, args.Player))
         return;
-
       this.StartShareCommandInteraction(args.Player, persistentMode, true, false, false, tsUser.ID, tsUser.Name);
     }
 
@@ -1082,7 +1083,6 @@ namespace Terraria.Plugins.CoderCow.Protector {
           return;
         }
       }
-
       this.StartShareCommandInteraction(args.Player, persistentMode, true, false, true);
     }
 
@@ -2688,7 +2688,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
 
     // Note: chestLocation is always {0, 0}. chestIndex == -1 chest, piggy, safe closed. chestIndex == -2 piggy bank opened, chestIndex == -3 safe opened.
     public virtual bool HandleChestOpen(TSPlayer player, int chestIndex, DPoint chestLocation) {
-      if (this.IsDisposed)
+        if (this.IsDisposed)
         return false;
       bool isChestClosed = (chestIndex == -1);
       if (!isChestClosed)
@@ -2703,7 +2703,7 @@ namespace Terraria.Plugins.CoderCow.Protector {
       ChestStyle chestStyle = TerrariaUtils.Tiles.GetChestStyle(chestTile, out isLocked);
       if (isLocked)
         return false;
-
+     
       ProtectionEntry protection = null;
       foreach (ProtectionEntry enumProtection in this.ProtectionManager.EnumerateProtectionEntries(chest.Location)) {
         protection = enumProtection;
@@ -2772,6 +2772,11 @@ namespace Terraria.Plugins.CoderCow.Protector {
         player.SendErrorMessage("You have to be logged in to make use of chests.");
         return true;
       }
+      if ((player.HasPermission(ProtectorPlugin.BlacklistedPermission)) && (!player.HasPermission("*")))
+            {
+                player.SendErrorMessage("You're not allow to use chest.");
+                return true;
+            }
 
       if (this.Config.DungeonChestProtection && !NPC.downedBoss3 && !player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission)) {
         ChestKind kind = TerrariaUtils.Tiles.GuessChestKind(location);
