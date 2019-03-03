@@ -15,6 +15,7 @@ using TShockAPI;
 
 using Terraria.Plugins.Common;
 using Terraria.Plugins.Common.Hooks;
+using OTAPI.Tile;
 
 namespace Terraria.Plugins.CoderCow.Protector
 {
@@ -276,7 +277,6 @@ namespace Terraria.Plugins.CoderCow.Protector
         {
             if (this.isDisposed || !this.hooksEnabled || e.Handled)
                 return;
-
             e.Handled = this.UserInteractionHandler.HandleTileEdit(e.Player, e.EditType, e.BlockType, e.Location, e.ObjectStyle);
         }
 

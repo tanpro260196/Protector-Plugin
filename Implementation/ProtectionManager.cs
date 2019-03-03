@@ -231,6 +231,7 @@ namespace Terraria.Plugins.CoderCow.Protector
                 ObjectMeasureData measureData = TerrariaUtils.Tiles.MeasureObject(tileLocation);
 
                 tileLocation = measureData.OriginTileLocation;
+                //TShock.Log.ConsoleError("Origin: " + tileLocation.ToString());
                 tileLocation.X = tileLocation.X + 1;
                 if (this.WorldMetadata.Protections.TryGetValue(tileLocation, out protection))
                     yield return protection;
@@ -255,6 +256,46 @@ namespace Terraria.Plugins.CoderCow.Protector
                 }
             }
             
+        }
+
+        public IEnumerable<ProtectionEntry> EnumerateProtectionEntries3(DPoint tileLocation)
+        {
+            ITile tile = TerrariaUtils.Tiles[tileLocation];
+            if (!tile.active())
+                yield break;
+
+            lock (this.WorldMetadata.Protections)
+            {
+                ProtectionEntry protection;
+                // This tile represents a sprite, no solid block.
+                ObjectMeasureData measureData = TerrariaUtils.Tiles.MeasureObject(tileLocation);
+
+                tileLocation = measureData.OriginTileLocation;
+                //TShock.Log.ConsoleError("Origin: " + tileLocation.ToString());
+                tileLocation.X = tileLocation.X - 1;
+                if (this.WorldMetadata.Protections.TryGetValue(tileLocation, out protection))
+                    yield return protection;
+
+                if (tile.type >= TileID.ImmatureHerbs && tile.type <= TileID.BloomingHerbs)
+                {
+                    // Clay Pots and their plants have a special handling - the plant should not be removable if the pot is protected.
+                    ITile tileBeneath = TerrariaUtils.Tiles[tileLocation.X, tileLocation.Y + 1];
+                    if (
+                      tileBeneath.type == TileID.ClayPot &&
+                      this.WorldMetadata.Protections.TryGetValue(new DPoint(tileLocation.X, tileLocation.Y + 1), out protection)
+                    )
+                    {
+                        yield return protection;
+                    }
+                }
+                else
+                {
+                    // Check all tiles above the sprite, in case a protected sprite is placed upon it (like on a table).
+                    foreach (ProtectionEntry protectionOnTop in this.EnumProtectionEntriesOnTopOfObject(measureData))
+                        yield return protectionOnTop;
+                }
+            }
+
         }
 
         private IEnumerable<ProtectionEntry> EnumProtectionEntriesOnTopOfObject(ObjectMeasureData measureData)

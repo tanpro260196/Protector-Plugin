@@ -2761,14 +2761,13 @@ namespace Terraria.Plugins.CoderCow.Protector
                 return true;
             
             ITile tiles = TerrariaUtils.Tiles[location];
-            //TShock.Log.ConsoleInfo(tiles.type.ToString() + " - " + editType + " - " + blockType);
             switch (editType)
             {
                 case TileEditType.PlaceTile:
                     {
                         if (!isLate)
                             break;
-
+                        
                         WorldGen.PlaceTile(location.X, location.Y, blockType, false, true, -1, objectStyle);
                         NetMessage.SendData((int)PacketTypes.Tile, -1, player.Index, NetworkText.Empty, 1, location.X, location.Y, blockType, objectStyle);
 
@@ -2785,10 +2784,11 @@ namespace Terraria.Plugins.CoderCow.Protector
 
                         ITile tile = TerrariaUtils.Tiles[location];
                         bool isChest = (tile.type == TileID.Containers || tile.type == TileID.Containers2 || tile.type == TileID.Dressers);
-                        bool ismanneorrack = ((tile.type == TileID.Mannequin) || (tile.type == TileID.Womannequin) || (tile.type == TileID.WeaponsRack));
+                        bool ismanne = ((tile.type == TileID.Mannequin) || (tile.type == TileID.Womannequin));
+                        bool israck = tile.type == TileID.WeaponsRack;
                         //------------------------------------------------
                         //-------------------------------------------------
-                        if (ismanneorrack)
+                        if ((ismanne) || israck)
                         {
                             foreach (ProtectionEntry protection in ProtectionManager.EnumerateProtectionEntries2(location))
                             {
@@ -2809,12 +2809,70 @@ namespace Terraria.Plugins.CoderCow.Protector
 
                                 if (protection.Owner == player.User.ID || (this.Config.AutoDeprotectEverythingOnDestruction && player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission)))
                                 {
-                                    //player.SendErrorMessage("You cannot deprotect mannequin, womannequin or weapon rack.");
-                                    //return true;
+                                    player.SendInfoMessage("You can't remove items from [i:498][i:1989][i:2699]");
+                                    return true;
                                 }
                                 else
                                 {
-                                    player.SendErrorMessage("You cannot deprotect mannequin, womannequin or weapon rack.");
+                                    player.SendErrorMessage("The object is protected.");
+                                    return true;
+                                }
+                            }
+
+                            foreach (ProtectionEntry protection in ProtectionManager.EnumerateProtectionEntries3(location))
+                            {
+                                // If the protection is invalid, just remove it.
+                                if (!TerrariaUtils.Tiles.IsValidCoord(protection.TileLocation))
+                                {
+                                    this.ProtectionManager.RemoveProtection(TSPlayer.Server, protection.TileLocation, false);
+                                    continue;
+                                }
+
+                                ITile protectedTile = TerrariaUtils.Tiles[protection.TileLocation];
+                                // If the protection is invalid, just remove it.
+                                if (!protectedTile.active() || protectedTile.type != protection.BlockType)
+                                {
+                                    this.ProtectionManager.RemoveProtection(TSPlayer.Server, protection.TileLocation, false);
+                                    continue;
+                                }
+
+                                if (protection.Owner == player.User.ID || (this.Config.AutoDeprotectEverythingOnDestruction && player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission)))
+                                {
+                                    player.SendInfoMessage("You can't remove items from [i:498][i:1989][i:2699]");
+                                    return true;
+                                }
+                                else
+                                {
+                                    player.SendErrorMessage("The object is protected.");
+                                    return true;
+                                }
+                            }
+
+                            foreach (ProtectionEntry protection in ProtectionManager.EnumerateProtectionEntries(location))
+                            {
+                                // If the protection is invalid, just remove it.
+                                if (!TerrariaUtils.Tiles.IsValidCoord(protection.TileLocation))
+                                {
+                                    this.ProtectionManager.RemoveProtection(TSPlayer.Server, protection.TileLocation, false);
+                                    continue;
+                                }
+
+                                ITile protectedTile = TerrariaUtils.Tiles[protection.TileLocation];
+                                // If the protection is invalid, just remove it.
+                                if (!protectedTile.active() || protectedTile.type != protection.BlockType)
+                                {
+                                    this.ProtectionManager.RemoveProtection(TSPlayer.Server, protection.TileLocation, false);
+                                    continue;
+                                }
+
+                                if (protection.Owner == player.User.ID || (this.Config.AutoDeprotectEverythingOnDestruction && player.Group.HasPermission(ProtectorPlugin.ProtectionMaster_Permission)))
+                                {
+                                    player.SendInfoMessage("You can't remove items from [i:498][i:1989][i:2699]");
+                                    return true;
+                                }
+                                else
+                                {
+                                    player.SendErrorMessage("The object is protected.");
                                     return true;
                                 }
                             }
@@ -2863,11 +2921,6 @@ namespace Terraria.Plugins.CoderCow.Protector
                                         }
                                     }
                                 }
-                                if (ismanneorrack)
-                                {
-                                    player.SendErrorMessage("You cannot deprotect mannequin, womannequin or weapon rack.");
-                                    return true;
-                                }
 
                                 this.ProtectionManager.RemoveProtection(player, protection.TileLocation, false);
                                 if (this.Config.NotifyAutoDeprotections)
@@ -2876,11 +2929,6 @@ namespace Terraria.Plugins.CoderCow.Protector
                             }
                             else
                             {
-                                if (ismanneorrack)
-                                {
-                                    player.SendErrorMessage("The object is protected.");
-                                    return true;
-                                }
                                 player.SendErrorMessage("The object is protected.");
                                 if (protection.TradeChestData != null)
                                     player.SendWarningMessage("If you want to trade with this chest, right click it first.");
@@ -2949,7 +2997,7 @@ namespace Terraria.Plugins.CoderCow.Protector
         {
             if (this.IsDisposed)
                 return false;
-
+            //TShock.Log.ConsoleInfo("Obj Placement: " + blockType + " - " + objectStyle + " - " + alternative);
             int directionInt = direction ? 1 : -1;
             WorldGen.PlaceObject(location.X, location.Y, blockType, false, objectStyle, alternative, random, directionInt);
             NetMessage.SendObjectPlacment(player.Index, location.X, location.Y, blockType, objectStyle, alternative, random, directionInt);
